@@ -38,9 +38,11 @@ class Predictor:
         self.threshold = threshold
         self.frames = deque(maxlen=30)
         self.last_time = None
+        self.probability_history = deque(maxlen=5)
 
     def reset(self):
         self.frames.clear()
+        self.probability_history.clear()
         self.last_time = None
 
     def update(self, features, timestamp):
@@ -53,6 +55,7 @@ class Predictor:
         self.last_time = timestamp
         if not np.any(features[-2:]):
             self.frames.clear()
+            self.probability_history.clear()
             return {"label": "No hands detected", "confidence": 0.0}
         self.frames.append(features)
         if len(self.frames) < 30:
@@ -60,6 +63,8 @@ class Predictor:
         sequence = validate_sequence(np.stack(self.frames))
         with torch.inference_mode():
             probabilities = self.model(torch.from_numpy(sequence).unsqueeze(0)).softmax(dim=1)[0]
+        self.probability_history.append(probabilities)
+        probabilities = torch.stack(list(self.probability_history)).mean(dim=0)
         confidence, index = probabilities.max(dim=0)
         score = float(confidence)
         label = self.metadata["labels"][int(index)] if score >= self.threshold else "Uncertain"
