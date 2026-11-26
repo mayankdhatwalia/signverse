@@ -1,0 +1,9 @@
+{
+  "labels": ["Hello", "Thank You", "Yes", "No", "Stop"],
+  "sequence_length": 30,
+  "sample_fps": 15,
+  "target_samples_per_class": 50,
+  "minimum_hand_frames": 24,
+  "confidence_threshold": 0.75,
+  "isl_definitions_verified": false
+}
